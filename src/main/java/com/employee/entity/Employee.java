@@ -4,6 +4,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Data
@@ -19,7 +20,7 @@ public class Employee {
     @NotEmpty
     private String surname;
 
-    @NotEmpty
+    @NotNull
     private Long salary;
 
     @ManyToOne

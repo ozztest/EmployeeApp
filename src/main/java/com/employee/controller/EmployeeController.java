@@ -6,11 +6,7 @@ import com.employee.exception.ContentNotFoundException;
 import com.employee.repository.DepartmentRepository;
 import com.employee.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "employee")
@@ -27,8 +23,8 @@ public class EmployeeController {
         return employeeRepository.findAll();
     }
 
-    @RequestMapping(value = "save", method = RequestMethod.POST)
-    public Employee save(@Valid Employee employee, Long departmentId) {
+    @RequestMapping(value = "save/{id}", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    public Employee save(@RequestBody Employee employee, @PathVariable("id") Long departmentId) {
         Department department = departmentRepository.findOne(departmentId);
         if (department == null) {
             throw new ContentNotFoundException(String.format("Department not found with department id : %s", departmentId));
@@ -39,12 +35,12 @@ public class EmployeeController {
     }
 
     @RequestMapping(value = "delete", method = RequestMethod.DELETE)
-    public void delete(Employee employee) {
+    public void delete(@RequestBody Employee employee) {
         employeeRepository.delete(employee);
     }
 
     @RequestMapping(value = "update", method = RequestMethod.PUT)
-    public Employee update(Employee employee) {
+    public Employee update(@RequestBody Employee employee) {
         return employeeRepository.save(employee);
     }
 }
