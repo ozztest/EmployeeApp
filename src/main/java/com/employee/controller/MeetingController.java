@@ -10,31 +10,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping(value = "meeting")
-public class MeetingController {
+@RestController @RequestMapping(value = "meeting") public class MeetingController {
 
-    @Autowired
-    private MeetingRepository meetingRepository;
+	@Autowired private MeetingRepository meetingRepository;
 
-    @Autowired
-    private DepartmentRepository departmentRepository;
+	@Autowired private DepartmentRepository departmentRepository;
 
-    @RequestMapping(value = "findAll")
-    public Iterable<Meeting> findAll() {
-        return meetingRepository.findAll();
-    }
+	@RequestMapping(value = "findAll") public Iterable<Meeting> findAll() {
+		return meetingRepository.findAll();
+	}
 
-    @RequestMapping(value = "joinMeeting", method = RequestMethod.POST)
-    public void joinMeeting(Long meetingId, Long departmentId) {
-        Meeting meeting = meetingRepository.findOne(meetingId);
-        Department department = departmentRepository.findOne(departmentId);
-        if (department == null || meeting == null) {
-            throw new ContentNotFoundException(String.format("Department or meeting not found with department id : %s meeting id : %s", departmentId, meetingId));
-        }
+	@RequestMapping(value = "find/{id}") public Meeting findOne(Long id) {
+		try {
+			Meeting meeting = meetingRepository.findOne(id);
+			return meeting;
+		} catch (Exception e) {
+			throw new ContentNotFoundException(String.format("Meeting not found with meeting id : %s", id));
+		}
+	}
 
-        meeting.getDepartments().add(department);
+	@RequestMapping(value = "joinMeeting", method = RequestMethod.POST) public void joinMeeting(Long meetingId, Long departmentId) {
+		Meeting meeting = meetingRepository.findOne(meetingId);
+		Department department = departmentRepository.findOne(departmentId);
+		if (department == null || meeting == null) {
+			throw new ContentNotFoundException(String.format("Department or meeting not found with department id : %s meeting id : %s", departmentId, meetingId));
+		}
 
-        meetingRepository.save(meeting);
-    }
+		meeting.getDepartments().add(department);
+
+		meetingRepository.save(meeting);
+	}
 }
