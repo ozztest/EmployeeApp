@@ -6,9 +6,9 @@ import com.employee.exception.ContentNotFoundException;
 import com.employee.repository.DepartmentRepository;
 import com.employee.repository.MeetingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashSet;
 
 @RestController @RequestMapping(value = "meeting") public class MeetingController {
 
@@ -29,6 +29,21 @@ import org.springframework.web.bind.annotation.RestController;
 		}
 	}
 
+	@RequestMapping(value = "save/{id}", method = RequestMethod.POST, consumes = "application/json", produces = "application/json") public Meeting save(@RequestBody Meeting meeting, @PathVariable("id") Long departmentId) {
+		try {
+			Department department = departmentRepository.findOne(departmentId);
+			meeting.setDepartments(new HashSet<Department>() {
+
+				{
+					add(department);
+				}
+			});
+		} catch (Exception e) {
+			throw new ContentNotFoundException(String.format("Department not found with department id : %s", departmentId));
+		}
+		return meetingRepository.save(meeting);
+	}
+
 	@RequestMapping(value = "joinMeeting", method = RequestMethod.POST) public void joinMeeting(Long meetingId, Long departmentId) {
 		Meeting meeting = meetingRepository.findOne(meetingId);
 		Department department = departmentRepository.findOne(departmentId);
@@ -40,4 +55,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 		meetingRepository.save(meeting);
 	}
+
+	@RequestMapping(value = "update", method = RequestMethod.PUT) public Meeting update(@RequestBody Meeting meeting) {
+		return meetingRepository.save(meeting);
+	}
+
 }
