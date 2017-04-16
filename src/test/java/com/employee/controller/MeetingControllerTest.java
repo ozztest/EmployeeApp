@@ -1,11 +1,10 @@
 package com.employee.controller;
 
 import com.employee.EmployeeApplication;
-import com.employee.entity.Department;
-import com.employee.entity.Employee;
 import com.employee.entity.Meeting;
 import com.employee.repository.DepartmentRepository;
 import com.employee.repository.MeetingRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -39,6 +38,8 @@ public class MeetingControllerTest {
             Charset.forName("utf8"));
 
     private MockMvc mockMvc;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     private HttpMessageConverter mappingJackson2HttpMessageConverter;
 
@@ -64,10 +65,8 @@ public class MeetingControllerTest {
     }
 
     protected String json(Object o) throws IOException {
-        MockHttpOutputMessage mockHttpOutputMessage = new MockHttpOutputMessage();
-        this.mappingJackson2HttpMessageConverter.write(
-                o, MediaType.APPLICATION_JSON, mockHttpOutputMessage);
-        return mockHttpOutputMessage.getBodyAsString();
+        String jsonInString = mapper.writeValueAsString(o);
+        return jsonInString;
     }
 
     @Before
@@ -75,18 +74,7 @@ public class MeetingControllerTest {
         this.mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
-    private void generateObjects() {
-        Department department = new Department();
-        department.setDescription("desc1");
-        department.setName("name1");
 
-        Meeting meeting = new Meeting();
-        meeting.setDescription("desc2");
-        meeting.setName("name2");
-
-        departmentRepository.save(department);
-        meetingRepository.save(meeting);
-    }
 
     @Test
     public void shouldThrowContentNotFoundExceptionWhenDepartmentIdIsNull() throws Exception {
@@ -108,27 +96,32 @@ public class MeetingControllerTest {
         ).andExpect(status().isNotFound());
     }
 
+
     @Test
-    public void shouldJoinMeeting() throws Exception {
-        generateObjects();
+    public void shouldSaveMeeting() throws Exception {
+        Meeting meeting = new Meeting();
+        meeting.setName("name");
+        meeting.setDescription("desc");
 
-        mockMvc.perform(post("/meeting/joinMeeting")
-                .param("departmentId", "1")
-                .param("meetingId", "1")
-                .contentType(contentType)
-
+        this.mockMvc.perform(
+                post("/meeting/save/")
+                        .content(this.json(meeting))
+                        .contentType(contentType)
         ).andExpect(status().isOk());
     }
 
     @Test
-    public void shouldSaveEmployee() throws Exception {
-        Employee employee = new Employee();
-        employee.setName("desc");
+    public void shouldThrowContentNotFoundExceptionWhenDeleteMeetingIdIsWrong() throws Exception {
+        Meeting meeting = new Meeting();
 
+        meeting.setName("name");
+        meeting.setDescription("desc");
+        this.meetingRepository.save(meeting);
+        meeting.setId(3453453L);
         this.mockMvc.perform(
-                post("/employee/save")
-                .content(this.json(employee))
-                .param("departmentId", "1")
-        ).andExpect(status().isOk());
+                delete("/meeting/delete")
+                        .content(this.json(meeting))
+                        .contentType(contentType)
+        ).andExpect(status().isNotFound());
     }
 }

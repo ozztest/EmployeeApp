@@ -50,7 +50,6 @@ public class DepartmentController {
 
     @RequestMapping(value = "save", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public Department save(@RequestBody Department department) {
-
         logger.info("Inserting New Department {}", department);
         return departmentRepository.save(department);
     }
@@ -58,7 +57,6 @@ public class DepartmentController {
 
     @RequestMapping(value = "save/{id}", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public Department save(@RequestBody Department department, @PathVariable("id") ArrayList<Long> meetingIds) {
-
         try {
             HashSet<Meeting> meetingHashSet = new HashSet<>();
             for (Long meetingId : meetingIds) {
@@ -81,12 +79,10 @@ public class DepartmentController {
     public void delete(@RequestBody Department department) {
         boolean exists = departmentRepository.exists(department.getId());
         if (exists) {
-
             for (Meeting m : department.getMeetings()) {
                 Meeting meet = meetingRepository.findOne(m.getId());
                 meet.getDepartments().remove(department);
             }
-
             Iterable<Employee> employees = employeeRepository.findAll();
             for (Employee m : employees) {
                 if (m.getDepartment().getId() == department.getId()) {
@@ -105,29 +101,25 @@ public class DepartmentController {
 
     @RequestMapping(value = "update/{id}", method = RequestMethod.PUT)
     public Department update(@RequestBody Department department, @PathVariable("id") ArrayList<Long> meetingIds) {
-
-        Department departmentFetched = departmentRepository.findOne(department.getId());
+        Department departWillUpdate = departmentRepository.findOne(department.getId());
         try {
-            for (Meeting meeting : departmentFetched.getMeetings()) {
+            for (Meeting meeting : departWillUpdate.getMeetings()) {
                 meeting.getDepartments().remove(department);
             }
-
             HashSet<Meeting> meetingHashSet = new HashSet<>();
             for (Long meetingId : meetingIds) {
-
                 Meeting meeting = meetingRepository.findOne(meetingId);
                 meetingHashSet.add(meeting);
-                meeting.getDepartments().add(departmentFetched);
+                meeting.getDepartments().add(departWillUpdate);
             }
-
-            departmentFetched.getMeetings().clear();
-            departmentFetched.getMeetings().addAll(meetingHashSet);
+            departWillUpdate.getMeetings().clear();
+            departWillUpdate.getMeetings().addAll(meetingHashSet);
 
         } catch (Exception e) {
             logger.info("Meeting does not exist!!");
             throw new ContentNotFoundException(String.format("Meeting does not found!! "));
         }
-        logger.info("Department will be updating {}", department);
-        return departmentRepository.save(departmentFetched);
+        logger.info("Department will be updating {}", departWillUpdate);
+        return departmentRepository.save(departWillUpdate);
     }
 }
